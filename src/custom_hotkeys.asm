@@ -1,7 +1,12 @@
 @HOOK	0x004A58DB		_Keyboard_Sidebar_Scroll_Up
 @HOOK	0x004A58B3		_Keyboard_Sidebar_Scroll_Down
+@HOOK	0x004A585D		_Keyboard_Sidebar_Toggle
 @HOOK	0x0042B6C6		_Keyboard_Process_New_Keys
 @HOOK	0x0042B665 		_Keyboard_Process_Unhardcode_Spacebar
+
+ShouldScrollDown dd 0
+ShouldScrollUp dd 0
+ShouldToggleSidebar dd 0
 
 ; The keyboard values of these hexadecimal can be found at
 ; http://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx
@@ -56,24 +61,22 @@
 	retn
 %endmacro
 
+; Use a global variable set in Keyboard_process to prevent issue with chatting
+_Keyboard_Sidebar_Toggle:
+	cmp		DWORD [ShouldToggleSidebar], 1
+	mov		DWORD [ShouldToggleSidebar], 0
+	jmp		0x004A5863
+
+; Use a global variable set in Keyboard_process to prevent issue with chatting
 _Keyboard_Sidebar_Scroll_Up:
-	push	eax
-	
-	mov		eax, [edi]
-	call	Convert_To_ASCII_Or_VK
-	cmp     DWORD eax, D_KEY
-	
-	pop		eax
+	cmp		DWORD [ShouldScrollUp], 1
+	mov		DWORD [ShouldScrollUp], 0
 	jmp		0x004A58E1
-	
+
+; Use a global variable set in Keyboard_process to prevent issue with chatting
 _Keyboard_Sidebar_Scroll_Down:
-	push	eax
-	
-	mov		eax, [edi]
-	call	Convert_To_ASCII_Or_VK
-	cmp     DWORD eax, SPACEBAR_KEY
-	
-	pop		eax
+	cmp		DWORD [ShouldScrollDown], 1
+	mov		DWORD [ShouldScrollDown], 0
 	jmp		0x004A58B9
 	
 _Keyboard_Process_New_Keys:
@@ -94,7 +97,15 @@ _Keyboard_Process_New_Keys:
 
 .Dont_Minus_20:	
 .Dont_Add_20:
+
+	CMP		eax, P_KEY
+	je		.Scroll_Toggle_Sidebar
 	
+	CMP		eax, D_KEY
+	je		.Scroll_Sidebar_Up
+	
+	CMP		eax, SPACEBAR_KEY
+	je		.Scroll_Sidebar_Down
 	
 	CMP		eax, W_KEY
 	je		.New_Bookmark_Key1
@@ -168,8 +179,9 @@ _Keyboard_Process_New_Keys:
 	CMP		eax, _9_KEY
 	je		.New_Team9_Key
 	
-		
-	Ret_Macro_Keyboard_Process ; We return here so the original hardcoded hotkeys don't get executed (except ESC key at beginning of function)
+	; We return here so the original hardcoded hotkeys don't 
+	; get executed (except ESC key at beginning of function)
+	Ret_Macro_Keyboard_Process 
 	
 .New_Bookmark_Key1:
 	xor		edx, edx
@@ -270,6 +282,18 @@ _Keyboard_Process_New_Keys:
 .New_Team9_Key:
 	mov		eax, 9
 	call	0x0042DFCC ; Handle_Team(int, int)
+	Ret_Macro_Keyboard_Process
+	
+.Scroll_Sidebar_Up:
+	mov		DWORD [ShouldScrollUp], 1
+	Ret_Macro_Keyboard_Process
+
+.Scroll_Sidebar_Down:
+	mov		DWORD [ShouldScrollDown], 1
+	Ret_Macro_Keyboard_Process
+
+.Scroll_Toggle_Sidebar:	
+	mov		DWORD [ShouldToggleSidebar], 1
 	Ret_Macro_Keyboard_Process
 	
 _Keyboard_Process_Unhardcode_Spacebar:
