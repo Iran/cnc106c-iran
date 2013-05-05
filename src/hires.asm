@@ -10,8 +10,9 @@
 @HOOK 0x004A6BA4	_StripClass_Draw_It_hires2
 @HOOK 0x004A4FD3	_SidebarClass_One_TIme_Icon_Area_Size_hires
 @HOOK 0x004A6407	_StripClass_AI_hires
+@HOOK 0x004A644A	_StripClass_AI_hires2
 @HOOK 0x004A6046	_StripClass_Init_IO_Up_Down_Buttons_hires
-@HOOK 0x004A633C	_StripClass_Scroll_hires
+;@HOOK 0x004A633C	_StripClass_Scroll_hires
 @HOOK 0x004A6734	_StripClass_Draw_It_hires3
 @HOOK 0x004A55CB	_SidebarClass_Add_hires
 @HOOK 0x0049A3E2	_Load_Game_hires
@@ -284,8 +285,17 @@ _StripClass_Init_IO_Up_Down_Buttons_hires: ; Fix up up and down buttons vertical
 	pop     ecx
 	pop     ebx
 	retn
+    
+_StripClass_AI_hires2:
+    mov     eax, [ebp+2Ch]
+    add     DWORD   eax, [CameoItems]
+    jmp     0x004A6450
 
-_StripClass_AI_hires: ; Not sure what this does and if this is needed, RA1 extended sidebar also has this..
+_StripClass_AI_hires: ; Not sure what this does and if this is needed, RA1 extended sidebar also has this
+
+;	mov     edx, [eax+2Ch] ; Current cameo item in sidebar
+;	mov     ebx, [eax+38h] ; Max cameo item in sidebar
+
 	cmp 	edi, [CameoItems]
 	jg		0x004A6415
 	jmp		0x004A640C
