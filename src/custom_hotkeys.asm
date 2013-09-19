@@ -4,6 +4,9 @@
 @HOOK	0x0042B6C6		_Keyboard_Process_New_Keys
 @HOOK	0x0042B665 		_Keyboard_Process_Unhardcode_Spacebar
 @HOOK	0x0048EA6D 		_Load_Conquer_INI_Load_Custom_Hotkeys
+@HOOK	0x004B1B01		_Unhardcode_ALT_Key
+@HOOK	0x004B1B26		_Unhardcode_CTRL_Key
+@HOOK	0x004B1B4B		_Unhardcode_Shift_Key
 
 ; args: <section>, <key>, <default>
 %macro Conquer_INI_Get_Int 3
@@ -13,6 +16,8 @@
 	mov     ecx, esi
     CALL 0x00490180 ; INIClass__Get_Int
 %endmacro
+
+CellDistance dd 256
 
 ShouldScrollDown dd 0
 ShouldScrollUp dd 0
@@ -44,6 +49,16 @@ Team6 dd 0
 Team7 dd 0
 Team8 dd 0
 Team9 dd 0
+ForceMove1 dd 0
+ForceMove2 dd 0
+ForceAttack1 dd 0
+ForceAttack2 dd 0
+Select1 dd 0
+Select2 dd 0
+ScrollLeft dd 0
+ScrollDown dd 0
+ScrollUp dd 0
+ScrollRight dd 0
 
 ; The keyboard values of these hexadecimal can be found at
 ; http://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx
@@ -142,6 +157,9 @@ _Keyboard_Process_New_Keys:
 .Dont_Minus_20:	
 .Dont_Add_20:
 
+	cmp		eax, 0x0
+	je		.Ret_Custom
+
 	CMP		eax, DWORD [SidebarToggle]
 	je		.Scroll_Toggle_Sidebar
 	
@@ -220,9 +238,59 @@ _Keyboard_Process_New_Keys:
 	CMP		eax, DWORD [Team9]
 	je		.New_Team9_Key
 	
+	CMP		eax, DWORD [ScrollLeft]
+	je		.Scroll_Left_Key
+	
+	CMP		eax, DWORD [ScrollRight]
+	je		.Scroll_Right_Key
+	
+	CMP		eax, DWORD [ScrollUp]
+	je		.Scroll_Up_Key
+	
+	CMP		eax, DWORD [ScrollDown]
+	je		.Scroll_Down_Key
+	
+.Ret_Custom:
 	; We return here so the original hardcoded hotkeys don't 
 	; get executed (except ESC key at beginning of function)
 	Ret_Macro_Keyboard_Process 
+	
+.Scroll_Left_Key:
+	mov     ecx, 1
+	mov		DWORD [CellDistance], 256
+	lea     ebx, [CellDistance]
+	mov     edx, 0C0h
+	mov     eax, 0x0053DDC0 ; offset MouseClass Map
+	call    0x00449C2C ; HelpClass::Scroll_Map(DirType,int &,int)
+	Ret_Macro_Keyboard_Process
+	
+	
+.Scroll_Right_Key:
+	mov     ecx, 1
+	mov		DWORD [CellDistance], 256	
+	lea     ebx, [CellDistance]
+	mov     edx, 040h
+	mov     eax, 0x0053DDC0 ; offset MouseClass Map
+	call    0x00449C2C ; HelpClass::Scroll_Map(DirType,int &,int)
+	Ret_Macro_Keyboard_Process
+	
+.Scroll_Up_Key:
+	mov     ecx, 1
+	mov		DWORD [CellDistance], 256
+	lea     ebx, [CellDistance]
+	mov     edx, 0x00
+	mov     eax, 0x0053DDC0 ; offset MouseClass Map
+	call    0x00449C2C ; HelpClass::Scroll_Map(DirType,int &,int)
+	Ret_Macro_Keyboard_Process
+	
+.Scroll_Down_Key:
+	mov     ecx, 1
+	mov		DWORD [CellDistance], 256
+	lea     ebx, [CellDistance]
+	mov     edx, 0x80
+	mov     eax, 0x0053DDC0 ; offset MouseClass Map
+	call    0x00449C2C ; HelpClass::Scroll_Map(DirType,int &,int)
+	Ret_Macro_Keyboard_Process
 	
 .New_Bookmark_Key1:
 	xor		edx, edx
@@ -368,6 +436,16 @@ str_KeyTeam8 db "KeyTeam8",0
 str_KeyTeam9 db "KeyTeam9",0
 str_KeyTeam10 db "KeyTeam10",0
 str_KeySidebarToggle db "KeySidebarToggle",0
+str_KeyForceMove1 db "KeyForceMove1",0
+str_KeyForceMove2 db "KeyForceMove2",0
+str_KeyForceAttack1 db "KeyForceAttack1",0
+str_KeyForceAttack2 db "KeyForceAttack2",0 
+str_KeySelect1 db "KeySelect1",0
+str_KeySelect2 db "KeySelect2",0
+str_KeyScrollLeft db "KeyScrollLeft",0
+str_KeyScrollRight db "KeyScrollRight",0
+str_KeyScrollUp db "KeyScrollUp",0
+str_KeyScrollDown db "KeyScrollDown",0
 	
 _Load_Conquer_INI_Load_Custom_Hotkeys:
 	pushad
@@ -450,6 +528,67 @@ _Load_Conquer_INI_Load_Custom_Hotkeys:
 	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam9, _9_KEY
 	mov		DWORD [Team9], eax
 	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeySelect1, 0x10
+	add		eax, 0x1000
+	mov		DWORD [Select1], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeySelect2, 0x10
+	add		eax, 0x1000
+	mov		DWORD [Select2], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyForceMove1, 0x12
+	add		eax, 0x1000
+	mov		DWORD [ForceMove1], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyForceMove2, 0x12
+	add		eax, 0x1000
+	mov		DWORD [ForceMove2], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyForceAttack1, 0x11
+	add		eax, 0x1000
+	mov		DWORD [ForceAttack1], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyForceAttack2, 0x11
+	add		eax, 0x1000
+	mov		DWORD [ForceAttack2], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyScrollLeft, 0x0
+	mov		DWORD [ScrollLeft], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyScrollRight, 0x0
+	mov		DWORD [ScrollRight], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyScrollUp, 0x0
+	mov		DWORD [ScrollUp], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyScrollDown, 0x0
+	mov		DWORD [ScrollDown], eax
+	
 	mov     edx, 0x004F6470 ; offset aGamespeed ; "GameSpeed"
 	popad
 	jmp		0x0048EA72
+	
+_Unhardcode_ALT_Key:
+	mov     eax, DWORD [ForceMove1]
+	call    0x004CD0C0 ; TabClass::Set_Active(int)
+	test    eax, eax
+	jnz		0x004B1B1D
+	mov     eax, DWORD [ForceMove2]
+	jmp		0x0004B1B14
+	
+_Unhardcode_CTRL_Key:
+	mov     eax, DWORD [ForceAttack1]
+	call    0x004CD0C0 ; TabClass::Set_Active(int)
+	test    eax, eax
+	jnz		0x004B1B42
+	mov     eax, DWORD [ForceAttack2]
+	jmp		0x004B1B39
+	
+_Unhardcode_Shift_Key:
+	mov     eax, DWORD [Select1]
+	call    0x004CD0C0 ; TabClass::Set_Active(int)
+	test    eax, eax
+	jnz     0x004B1B67
+	mov     eax, DWORD [Select2]
+	jmp		0x004B1B5E
+	
