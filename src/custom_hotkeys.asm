@@ -3,15 +3,53 @@
 @HOOK	0x004A585D		_Keyboard_Sidebar_Toggle
 @HOOK	0x0042B6C6		_Keyboard_Process_New_Keys
 @HOOK	0x0042B665 		_Keyboard_Process_Unhardcode_Spacebar
+@HOOK	0x0048EA6D 		_Load_Conquer_INI_Load_Custom_Hotkeys
+
+; args: <section>, <key>, <default>
+%macro Conquer_INI_Get_Int 3
+    MOV ebx, %3 ; default
+    MOV edx, dword %2 ; key
+    MOV eax, dword %1 ; section
+	mov     ecx, esi
+    CALL 0x00490180 ; INIClass__Get_Int
+%endmacro
 
 ShouldScrollDown dd 0
 ShouldScrollUp dd 0
 ShouldToggleSidebar dd 0
 
+SidebarScrollUp dd 0
+SidebarScrollDown dd 0
+SidebarToggle dd 0 
+Bookmark1 dd 0
+Bookmark2 dd 0
+Bookmark3 dd 0
+Bookmark4 dd 0
+ScatterUnits dd 0
+CenterBase dd 0
+StopAction dd 0
+NextUnit dd 0
+Resign dd 0
+Alliance dd 0
+Guard dd 0
+RepairModeToggle dd 0
+SellModeToggle dd 0
+Team10 dd 0
+Team1 dd 0
+Team2 dd 0
+Team3 dd 0
+Team4 dd 0
+Team5 dd 0
+Team6 dd 0
+Team7 dd 0
+Team8 dd 0
+Team9 dd 0
+
 ; The keyboard values of these hexadecimal can be found at
 ; http://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx
 ; A-Z is mapped as ASCII code minus 20 hex
 ; Call Convert_To_ASCII_Or_VK function to convert, not sure if end value is ACII or VK
+%define TAB_KEY					0x8
 %define	ScrollUpKey 			0x26
 %define ScrollDownKey			0x27
 %define B_KEY					0x42
@@ -46,6 +84,12 @@ ShouldToggleSidebar dd 0
 %define _7_KEY					0x37
 %define _8_KEY					0x38
 %define _9_KEY					0x39
+%define F7_KEY					0x76
+%define F8_KEY					0x77
+%define F9_KEY					0x78
+%define F10_KEY					0x79
+%define F11_KEY					0x7A
+%define F12_KEY					0x7B
 %define SPACEBAR_KEY			0x20
 
 %define Convert_To_ASCII_Or_VK	0x004CD07C
@@ -98,85 +142,82 @@ _Keyboard_Process_New_Keys:
 .Dont_Minus_20:	
 .Dont_Add_20:
 
-	CMP		eax, P_KEY
+	CMP		eax, DWORD [SidebarToggle]
 	je		.Scroll_Toggle_Sidebar
 	
-	CMP		eax, D_KEY
+	CMP		eax, DWORD [SidebarScrollUp]
 	je		.Scroll_Sidebar_Up
 	
-	CMP		eax, SPACEBAR_KEY
+	CMP		eax, DWORD [SidebarScrollDown]
 	je		.Scroll_Sidebar_Down
 	
-	CMP		eax, W_KEY
+	CMP		eax, DWORD [Bookmark1]
 	je		.New_Bookmark_Key1
 	
-	CMP		eax, R_KEY
+	CMP		eax, DWORD [Bookmark2]
 	je		.New_Bookmark_Key2
 	
-	CMP		eax, T_KEY
+	CMP		eax, DWORD [Bookmark3]
 	je		.New_Bookmark_Key3
 	
-	CMP		eax, Z_KEY
+	CMP		eax, DWORD [Bookmark4]
 	je		.New_Bookmark_Key4
 	
-	CMP		eax, X_KEY
+	CMP		eax, DWORD [ScatterUnits]
 	je		0x0042BA8A ; Scatter units
 	
-	CMP		eax, H_KEY
+	CMP		eax, DWORD [CenterBase]
 	je		0x0042B72D ; H key code, center view on conyard
 	
-	CMP		eax, S_KEY
+	CMP		eax, DWORD [StopAction]
 	je		0x0042B9B5 ; Stop key
 	
-	CMP		eax, N_KEY
+	CMP		eax, DWORD [NextUnit]
 	je		.Next_Unit_Key ; next unit key
 	
-	CMP		eax, Z_KEY
+	CMP		eax, DWORD [Resign]
 	je		0x0042B86E ; Resign key
 	
-	CMP		eax, A_KEY
+	CMP		eax, DWORD [Alliance]
 	je		0x0042B894 ; Alliance key
 	
-	CMP		eax, G_KEY
+	CMP		eax, DWORD [Guard]
 	je		0x0042BB49 ; Guard key
 	
-	CMP		eax, C_KEY
+	CMP		eax, DWORD [RepairModeToggle]
 	je		.Repair_Mode_Toggle
 	
-	CMP		eax, V_KEY
+	CMP		eax, DWORD [SellModeToggle]
 	je		.Sell_Mode_Toggle
 	
-	CMP		eax, _0_KEY
+	CMP		eax, DWORD [Team10]
 	je		.New_Team0_Key
 	
-	CMP		eax, _1_KEY
+	CMP		eax, DWORD [Team1]
 	je		.New_Team1_Key
 	
-	CMP		eax, _2_KEY
+	CMP		eax, DWORD [Team2]
 	je		.New_Team2_Key
 	
-	CMP		eax, _3_KEY
+	CMP		eax, DWORD [Team3]
 	je		.New_Team3_Key
 	
-	CMP		eax, _3_KEY
-	je		.New_Team3_Key
-	
-	CMP		eax, _4_KEY
+	CMP		eax, DWORD [Team4]
 	je		.New_Team4_Key
 	
-	CMP		eax, _5_KEY
+	CMP		eax, DWORD [Team5]
 	je		.New_Team5_Key
 
-	CMP		eax, _6_KEY
+	CMP		eax, DWORD [Team6]
 	je		.New_Team6_Key
 	
-	CMP		eax, _7_KEY
+	CMP		eax, DWORD [Team7]
 	je		.New_Team7_Key
 	
-	CMP		eax, _8_KEY
+	CMP		eax, DWORD [Team8]
 	je		.New_Team8_Key
 	
-	CMP		eax, _9_KEY
+	CMP		eax, DWORD [Team9]
 	je		.New_Team9_Key
 	
 	; We return here so the original hardcoded hotkeys don't 
@@ -298,3 +339,117 @@ _Keyboard_Process_New_Keys:
 	
 _Keyboard_Process_Unhardcode_Spacebar:
 	jmp		0x0042B66A
+	
+str_winhotkeys db "WinHotkeys",0
+
+str_KeyScatter db "KeyScatter",0
+str_KeyStop db "KeyStop",0
+str_KeyGuard db "KeyGuard",0
+str_KeyNext db "KeyNext",0
+str_KeyBase db "KeyBase",0
+str_KeyResign db "KeyResign",0
+str_KeyAlliance db "KeyAlliance",0
+str_KeyBookmark1 db "KeyBookmark1",0
+str_KeyBookmark2 db "KeyBookmark2",0
+str_KeyBookmark3 db "KeyBookmark3",0
+str_KeyBookmark4 db "KeyBookmark4",0
+str_KeyRepairToggle db "KeyRepairToggle",0
+str_KeySellToggle db "KeySellToggle",0
+str_KeySidebarUp db "KeySidebarUp",0
+str_KeySidebarDown db "KeySidebarDown",0
+str_KeyTeam1 db "KeyTeam1",0
+str_KeyTeam2 db "KeyTeam2",0
+str_KeyTeam3 db "KeyTeam3",0
+str_KeyTeam4 db "KeyTeam4",0
+str_KeyTeam5 db "KeyTeam5",0
+str_KeyTeam6 db "KeyTeam6",0
+str_KeyTeam7 db "KeyTeam7",0
+str_KeyTeam8 db "KeyTeam8",0
+str_KeyTeam9 db "KeyTeam9",0
+str_KeyTeam10 db "KeyTeam10",0
+str_KeySidebarToggle db "KeySidebarToggle",0
+	
+_Load_Conquer_INI_Load_Custom_Hotkeys:
+	pushad
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeySidebarUp, 0x26
+	mov		DWORD [SidebarScrollUp], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeySidebarDown, 0x27
+	mov		DWORD [SidebarScrollDown], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeySidebarToggle, TAB_KEY
+	mov		DWORD [SidebarToggle], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyScatter, X_KEY
+	mov		DWORD [ScatterUnits], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyStop, S_KEY
+	mov		DWORD [StopAction], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyGuard, G_KEY
+	mov		DWORD [Guard], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyNext, N_KEY
+	mov		DWORD [NextUnit], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyBase, H_KEY
+	mov		DWORD [CenterBase], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyResign, R_KEY
+	mov		DWORD [Resign], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyAlliance, A_KEY
+	mov		DWORD [Alliance], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyBookmark1, F7_KEY
+	mov		DWORD [Bookmark1], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyBookmark2, F8_KEY
+	mov		DWORD [Bookmark2], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyBookmark3, F9_KEY
+	mov		DWORD [Bookmark3], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyBookmark4, F10_KEY
+	mov		DWORD [Bookmark4], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyRepairToggle, T_KEY
+	mov		DWORD [RepairModeToggle], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeySellToggle, Y_KEY
+	mov		DWORD [SellModeToggle], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam10, _0_KEY
+	mov		DWORD [Team10], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam1, _1_KEY
+	mov		DWORD [Team1], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam2, _2_KEY
+	mov		DWORD [Team2], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam3, _3_KEY
+	mov		DWORD [Team3], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam4, _4_KEY
+	mov		DWORD [Team4], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam5, _5_KEY
+	mov		DWORD [Team5], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam6, _6_KEY
+	mov		DWORD [Team6], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam7, _7_KEY
+	mov		DWORD [Team7], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam8, _8_KEY
+	mov		DWORD [Team8], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam9, _9_KEY
+	mov		DWORD [Team9], eax
+	
+	mov     edx, 0x004F6470 ; offset aGamespeed ; "GameSpeed"
+	popad
+	jmp		0x0048EA72

@@ -51,6 +51,7 @@ _PowerClass_Draw_It_hires2: ; Draw the whole powerbar graphics with power bar ti
 	mov 	ecx, [eax+64h]
 ;	mov		ecx, 0xB4
 ;	add		ecx, 64h
+;   mov		[0], ecx ; crash
 	mov		[CurrentPowerBarDrawPosition2], ecx
 	
 .Loop:
