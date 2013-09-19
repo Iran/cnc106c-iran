@@ -18,6 +18,7 @@
 %endmacro
 
 CellDistance dd 256
+SelectTheseTemp dd 0
 
 ShouldScrollDown dd 0
 ShouldScrollUp dd 0
@@ -59,6 +60,7 @@ ScrollLeft dd 0
 ScrollDown dd 0
 ScrollUp dd 0
 ScrollRight dd 0
+SelectScreen dd 0
 
 ; The keyboard values of these hexadecimal can be found at
 ; http://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx
@@ -250,10 +252,24 @@ _Keyboard_Process_New_Keys:
 	CMP		eax, DWORD [ScrollDown]
 	je		.Scroll_Down_Key
 	
+	CMP		eax, DWORD [SelectScreen]
+	je		.Select_Screen_Key
+	
 .Ret_Custom:
 	; We return here so the original hardcoded hotkeys don't 
 	; get executed (except ESC key at beginning of function)
-	Ret_Macro_Keyboard_Process 
+	Ret_Macro_Keyboard_Process
+
+.Select_Screen_Key:
+	mov     dx, [0x0053DECF] ; ds:__GScreen_PosX
+	mov     ax, [0x0053DED3] ; ds:__GScreen_PosY
+	mov     word [SelectTheseTemp], dx
+	mov     word [SelectTheseTemp+2], ax
+	mov     ebx, DWORD [SelectTheseTemp]
+	mov     eax, 0x0053DDC0 ; offset MouseClass Map
+	xor     edx, edx
+	call    0x00434B00 ; DisplayClass::Select_These(ulong,ulong)
+	Ret_Macro_Keyboard_Process
 	
 .Scroll_Left_Key:
 	mov     ecx, 1
@@ -446,6 +462,7 @@ str_KeyScrollLeft db "KeyScrollLeft",0
 str_KeyScrollRight db "KeyScrollRight",0
 str_KeyScrollUp db "KeyScrollUp",0
 str_KeyScrollDown db "KeyScrollDown",0
+str_KeySelectView db "KeySelectView",0
 	
 _Load_Conquer_INI_Load_Custom_Hotkeys:
 	pushad
@@ -563,6 +580,9 @@ _Load_Conquer_INI_Load_Custom_Hotkeys:
 	
 	Conquer_INI_Get_Int		str_winhotkeys, str_KeyScrollDown, 0x0
 	mov		DWORD [ScrollDown], eax
+	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeySelectView, 0x0
+	mov		DWORD [SelectScreen], eax
 	
 	mov     edx, 0x004F6470 ; offset aGamespeed ; "GameSpeed"
 	popad
