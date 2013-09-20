@@ -61,6 +61,7 @@ ScrollDown dd 0
 ScrollUp dd 0
 ScrollRight dd 0
 SelectScreen dd 0
+MapToggle dd 0
 
 ; The keyboard values of these hexadecimal can be found at
 ; http://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx
@@ -262,6 +263,9 @@ _Keyboard_Process_New_Keys:
 	CMP		eax, DWORD [SelectScreen]
 	je		.Select_Screen_Key
 	
+	CMP		eax, DWORD [MapToggle]
+	je		.Map_Toggle_Key
+	
 .Ret_Custom:
 	; We return here so the original hardcoded hotkeys don't 
 	; get executed (except ESC key at beginning of function)
@@ -418,6 +422,10 @@ _Keyboard_Process_New_Keys:
 	mov		DWORD [ShouldToggleSidebar], 1
 	Ret_Macro_Keyboard_Process
 	
+.Map_Toggle_Key:
+	call Toggle_Map_Preview
+	Ret_Macro_Keyboard_Process
+	
 _Keyboard_Process_Unhardcode_Spacebar:
 	jmp		0x0042B66A
 	
@@ -460,6 +468,7 @@ str_KeyScrollRight db "KeyScrollRight",0
 str_KeyScrollUp db "KeyScrollUp",0
 str_KeyScrollDown db "KeyScrollDown",0
 str_KeySelectView db "KeySelectView",0
+str_KeyMapToggle db "KeyMapToggle",0
 	
 _Load_Conquer_INI_Load_Custom_Hotkeys:
 	pushad
@@ -542,6 +551,9 @@ _Load_Conquer_INI_Load_Custom_Hotkeys:
 	Conquer_INI_Get_Int		str_winhotkeys, str_KeyTeam9, _9_KEY
 	mov		DWORD [Team9], eax
 	
+	Conquer_INI_Get_Int		str_winhotkeys, str_KeyMapToggle, U_KEY
+	mov		DWORD [MapToggle], eax
+	
 	Conquer_INI_Get_Int		str_winhotkeys, str_KeySelect1, 0x10
 	add		eax, 0x1000
 	mov		DWORD [Select1], eax
@@ -608,4 +620,71 @@ _Unhardcode_Shift_Key:
 	jnz     0x004B1B67
 	mov     eax, DWORD [Select2]
 	jmp		0x004B1B5E
+	
+Toggle_Map_Preview:
+	pushad
+	mov		esi, 0x0053DDC0 ; MouseClass Map
+	test    byte [esi+174h], 8
+	jz      .Jump_Somewhere
+	mov     eax, [esi+174h]
+	shl     eax, 10h
+	shr     eax, 1Fh
+	test    eax, eax
+	jnz     .Jump_Somewhere2
+	cmp     BYTE [0x005405C9], 0 ; ds:SessionClass__Session
+	jnz     .Not_Singleplayer
+
+.Jump_Somewhere2:
+	mov     eax, [esi+10Bh]
+	mov     ebx, eax
+	shr     eax, 10h
+	xor     al, al
+	shr     eax, 2
+	or      al, bh
+	movsx   edx, ax
+	mov     eax, esi
+	call    0x00495D2C ; RadarClass::Zoom_Mode(short)
+	jmp     .Ret
+
+.Not_Singleplayer:
+	mov     eax, [esi+174h]
+	shl     eax, 0Fh
+	shr     eax, 1Fh
+	test    eax, eax
+	jnz     .Change_Zoom_Mode
+	mov     edx, 1
+	jmp     .Jump_Somewhere3
+
+.Change_Zoom_Mode:
+	mov     eax, esi
+	xor     edx, edx
+	call    0x004980E4
+	mov     eax, [esi+10Bh]
+	mov     ebx, eax
+	shr     eax, 10h
+	xor     al, al
+	shr     eax, 2
+	or      al, bh
+	movsx   edx, ax
+	mov     eax, esi
+	call    0x00495D2C ; RadarClass::Zoom_Mode(short)
+	jmp     .Ret
+
+.Jump_Somewhere:
+	cmp     BYTE [0x005405C9], 0 ; ds:SessionClass__Session
+	jz      .Ret
+	mov     eax, [esi+174h]
+	shl     eax, 0Fh
+	shr     eax, 1Fh
+	xor     edx, edx
+	test    eax, eax
+	setz    al
+	mov     dl, al
+
+.Jump_Somewhere3:
+	mov     eax, esi
+	call    0x004980E4
+.Ret: 
+	popad
+	retn
 	
