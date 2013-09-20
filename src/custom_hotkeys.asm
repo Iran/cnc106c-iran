@@ -142,22 +142,29 @@ _Keyboard_Sidebar_Scroll_Down:
 	
 _Keyboard_Process_New_Keys:
 	call    0x005C5000
+		
+	cmp		eax, 0x10 ; Shift key
+	je		.Ret_Custom
 	
-	cmp		edx, 2
-	jnz		.Dont_Minus_20
+	cmp		eax, 0x11 ; Ctrl key
+	je		.Ret_Custom
+	
+	cmp		eax, 0x12 ; ALT key
+	je		.Ret_Custom
+		
+	cmp		edx, 0
+	je		.Dont_Minus_20
+	
+	cmp		eax, 0x7A
+	jg		.Dont_Minus_20
+	
+	cmp		eax, 0x61
+	jl		.Dont_Minus_20
+
 	
 	sub		eax, 20h
-	
-	; keys 0-10 (minus 20hex)
-	cmp		eax, 0x10
-	jl		.Dont_Add_20
-	cmp		eax, 0x19
-	jg		.Dont_Add_20
-	
-	add		eax, 20h
 
 .Dont_Minus_20:	
-.Dont_Add_20:
 
 	cmp		eax, 0x0
 	je		.Ret_Custom
@@ -309,36 +316,26 @@ _Keyboard_Process_New_Keys:
 	Ret_Macro_Keyboard_Process
 	
 .New_Bookmark_Key1:
-	xor		edx, edx
-	cmp		ebx, 100h
-	setge	dl
 	mov		eax, 0
 	call    0x0042E33C
 	Ret_Macro_Keyboard_Process
 
 .New_Bookmark_Key2:
-	xor		edx, edx
-	cmp		ebx, 100h
-	setge	dl
+;	xor		edx, edx
+;	cmp		ebx, 100h
+;	setge	dl
 	mov		ebx, C_KEY
 	mov		eax, 1
 	call    0x0042E33C
 	Ret_Macro_Keyboard_Process
 
 .New_Bookmark_Key3:
-	xor		edx, edx
-	cmp		ebx, 100h
-	setge	dl
 	mov		ebx, V_KEY
 	mov		eax, 2
 	call    0x0042E33C
 	Ret_Macro_Keyboard_Process
 	
 .New_Bookmark_Key4:
-	xor		edx, edx
-	cmp		ebx, 100h
-	setge	dl
-	mov		ebx, M_KEY
 	mov		eax, 3
 	call    0x0042E33C
 	Ret_Macro_Keyboard_Process
