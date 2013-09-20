@@ -581,8 +581,8 @@ _Load_Conquer_INI_Load_Custom_Hotkeys:
 	Conquer_INI_Get_Int		str_winhotkeys, str_KeySelectView, 0x0
 	mov		DWORD [SelectScreen], eax
 	
-	mov     edx, 0x004F6470 ; offset aGamespeed ; "GameSpeed"
 	popad
+	mov     edx, 0x004F6470 ; offset aGamespeed ; "GameSpeed"
 	jmp		0x0048EA72
 	
 _Unhardcode_ALT_Key:
